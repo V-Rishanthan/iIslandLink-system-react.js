@@ -2,7 +2,7 @@ import CategoryPageLayout, {
   type Product,
 } from "../components/CategoryPageLayout";
 
-import heroImg from "../assets/beverages/Apple Juice.jpg";
+import heroImg from "../assets/categories/beverages.png";
 import img1 from "../assets/beverages/Apple Juice.jpg";
 import img2 from "../assets/beverages/Fanta.jpg";
 import img3 from "../assets/beverages/Green tin mojito.jpg";

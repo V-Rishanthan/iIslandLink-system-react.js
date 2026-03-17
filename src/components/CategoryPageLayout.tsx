@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, X, Send, ChevronRight, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ShoppingCart,
+  X,
+  Send,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 
 export interface Product {
   id: number;
@@ -21,14 +28,24 @@ interface Props {
   title: string;
   subtitle: string;
   description: string;
-  accentColor: string;       // e.g. "violet"
-  accentHex: string;         // e.g. "#8B5CF6"
+  accentColor: string; // e.g. "violet"
+  accentHex: string; // e.g. "#8B5CF6"
   products: Product[];
   heroImage: string;
   backPath?: string;
 }
 
-const ACCENT_CLASSES: Record<string, { text: string; bg: string; border: string; badge: string; btn: string; shadow: string }> = {
+const ACCENT_CLASSES: Record<
+  string,
+  {
+    text: string;
+    bg: string;
+    border: string;
+    badge: string;
+    btn: string;
+    shadow: string;
+  }
+> = {
   violet: {
     text: "text-violet-400",
     bg: "bg-violet-500/10",
@@ -78,23 +95,33 @@ export default function CategoryPageLayout({
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [orderOpen, setOrderOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    notes: "",
+  });
   const [sent, setSent] = useState(false);
 
-  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
+  const categories = [
+    "All",
+    ...Array.from(new Set(products.map((p) => p.category))),
+  ];
 
   const filtered = products.filter((p) => {
     const matchSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchCat = selectedCategory === "All" || p.category === selectedCategory;
+    const matchCat =
+      selectedCategory === "All" || p.category === selectedCategory;
     return matchSearch && matchCat;
   });
 
   function addToCart(p: Product) {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === p.id);
-      if (existing) return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
+      if (existing)
+        return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
       return [...prev, { ...p, qty: 1 }];
     });
   }
@@ -123,17 +150,26 @@ export default function CategoryPageLayout({
 
   return (
     <div className="min-h-screen bg-[#08080C] font-sans">
-
       {/* ── HERO BANNER ─────────────────────────────────────────── */}
       <div className="relative overflow-hidden h-72 md:h-80">
-        <img src={heroImage} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        <img
+          src={heroImage}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#08080C]/60 to-[#08080C]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#08080C]/80 via-transparent to-transparent" />
 
         {/* Nav */}
         <div className="relative z-10 flex items-center justify-between px-6 md:px-14 pt-6">
-          <Link to={backPath} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm font-medium group">
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <Link
+            to={backPath}
+            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm font-medium group"
+          >
+            <ArrowLeft
+              size={16}
+              className="group-hover:-translate-x-1 transition-transform"
+            />
             Back to Home
           </Link>
 
@@ -155,9 +191,17 @@ export default function CategoryPageLayout({
 
         {/* Title */}
         <div className="relative z-10 px-6 md:px-14 pt-8">
-          <p className={`text-xs font-bold uppercase tracking-widest ${ac.text} mb-2`}>{subtitle}</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">{title}</h1>
-          <p className="text-white/45 text-sm md:text-base mt-3 max-w-xl leading-relaxed">{description}</p>
+          <p
+            className={`text-xs font-bold uppercase tracking-widest ${ac.text} mb-2`}
+          >
+            {subtitle}
+          </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
+            {title}
+          </h1>
+          <p className="text-white/45 text-sm md:text-base mt-3 max-w-xl leading-relaxed">
+            {description}
+          </p>
         </div>
       </div>
 
@@ -166,7 +210,10 @@ export default function CategoryPageLayout({
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Search */}
           <div className="relative w-full sm:w-72">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
+            />
             <input
               id="product-search"
               value={search}
@@ -194,13 +241,17 @@ export default function CategoryPageLayout({
           </div>
         </div>
 
-        <p className="text-white/30 text-xs mt-4">{filtered.length} product{filtered.length !== 1 ? "s" : ""} found</p>
+        <p className="text-white/30 text-xs mt-4">
+          {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
+        </p>
       </div>
 
       {/* ── PRODUCT GRID ────────────────────────────────────────── */}
       <div className="px-6 md:px-14 pb-24">
         {filtered.length === 0 ? (
-          <div className="text-center py-24 text-white/30 text-sm">No products match your search.</div>
+          <div className="text-center py-24 text-white/30 text-sm">
+            No products match your search.
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filtered.map((p) => {
@@ -212,7 +263,9 @@ export default function CategoryPageLayout({
                 >
                   {/* Badge */}
                   {p.badge && (
-                    <span className={`absolute top-2 left-2 z-10 text-[10px] font-bold px-2 py-0.5 rounded-full ${ac.badge}`}>
+                    <span
+                      className={`absolute top-2 left-2 z-10 text-[10px] font-bold px-2 py-0.5 rounded-full ${ac.badge}`}
+                    >
                       {p.badge}
                     </span>
                   )}
@@ -228,20 +281,33 @@ export default function CategoryPageLayout({
 
                   {/* Info */}
                   <div className="p-3 flex flex-col flex-1">
-                    <p className="text-white/35 text-[10px] font-mono mb-1">{p.sku}</p>
-                    <h3 className="text-white text-sm font-semibold leading-snug mb-1 line-clamp-2">{p.name}</h3>
-                    <p className={`text-xs ${ac.text} font-bold mb-3`}>{p.price} <span className="text-white/30 font-normal">/ {p.unit}</span></p>
+                    <p className="text-white/35 text-[10px] font-mono mb-1">
+                      {p.sku}
+                    </p>
+                    <h3 className="text-white text-sm font-semibold leading-snug mb-1 line-clamp-2">
+                      {p.name}
+                    </h3>
+                    <p className={`text-xs ${ac.text} font-bold mb-3`}>
+                      {p.price}{" "}
+                      <span className="text-white/30 font-normal">
+                        / {p.unit}
+                      </span>
+                    </p>
 
                     <button
                       id={`add-to-cart-${p.id}`}
                       onClick={() => addToCart(p)}
                       className={`mt-auto w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                        inCart ? "bg-white/10 border border-white/15" : `${ac.btn}`
+                        inCart
+                          ? "bg-white/10 border border-white/15"
+                          : `${ac.btn}`
                       }`}
                     >
                       {inCart ? (
                         <>
-                          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">{inCart.qty}</span>
+                          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+                            {inCart.qty}
+                          </span>
                           Added
                         </>
                       ) : (
@@ -262,45 +328,82 @@ export default function CategoryPageLayout({
       {/* ── ORDER MODAL ─────────────────────────────────────────── */}
       {orderOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOrderOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setOrderOpen(false)}
+          />
 
           <div className="relative z-10 w-full max-w-lg bg-[#0E1015] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
               <div>
                 <h2 className="text-white font-bold text-lg">Order Enquiry</h2>
-                <p className="text-white/40 text-xs mt-0.5">We'll contact you within 24 hours</p>
+                <p className="text-white/40 text-xs mt-0.5">
+                  We'll contact you within 24 hours
+                </p>
               </div>
-              <button onClick={() => setOrderOpen(false)} className="text-white/40 hover:text-white transition-colors">
+              <button
+                onClick={() => setOrderOpen(false)}
+                className="text-white/40 hover:text-white transition-colors"
+              >
                 <X size={20} />
               </button>
             </div>
 
             <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-
               {/* Cart items */}
               {cart.length === 0 ? (
                 <div className="text-center py-10 text-white/30 text-sm">
                   <ShoppingCart size={32} className="mx-auto mb-3 opacity-30" />
-                  No products added yet.<br />
-                  <span className="text-xs">Go back and click "Add to Enquiry" on products.</span>
+                  No products added yet.
+                  <br />
+                  <span className="text-xs">
+                    Go back and click "Add to Enquiry" on products.
+                  </span>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Selected Products</p>
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">
+                    Selected Products
+                  </p>
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 bg-white/4 rounded-xl p-3 border border-white/7">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover bg-white/10 shrink-0" />
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 bg-white/4 rounded-xl p-3 border border-white/7"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-lg object-cover bg-white/10 shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{item.name}</p>
-                        <p className={`text-xs ${ac.text}`}>{item.price} / {item.unit}</p>
+                        <p className="text-white text-sm font-medium truncate">
+                          {item.name}
+                        </p>
+                        <p className={`text-xs ${ac.text}`}>
+                          {item.price} / {item.unit}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => updateQty(item.id, item.qty - 1)} className="w-6 h-6 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-white/20 transition-colors">−</button>
-                        <span className="text-white text-sm w-5 text-center font-semibold">{item.qty}</span>
-                        <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-6 h-6 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-white/20 transition-colors">+</button>
-                        <button onClick={() => removeFromCart(item.id)} className="ml-1 text-white/30 hover:text-red-400 transition-colors">
+                        <button
+                          onClick={() => updateQty(item.id, item.qty - 1)}
+                          className="w-6 h-6 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-white/20 transition-colors"
+                        >
+                          −
+                        </button>
+                        <span className="text-white text-sm w-5 text-center font-semibold">
+                          {item.qty}
+                        </span>
+                        <button
+                          onClick={() => updateQty(item.id, item.qty + 1)}
+                          className="w-6 h-6 rounded-full bg-white/10 text-white text-sm flex items-center justify-center hover:bg-white/20 transition-colors"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="ml-1 text-white/30 hover:text-red-400 transition-colors"
+                        >
                           <X size={14} />
                         </button>
                       </div>
@@ -315,35 +418,55 @@ export default function CategoryPageLayout({
               {/* Contact form */}
               {sent ? (
                 <div className="text-center py-10">
-                  <div className={`w-16 h-16 rounded-full ${ac.bg} border ${ac.border} flex items-center justify-center mx-auto mb-4`}>
+                  <div
+                    className={`w-16 h-16 rounded-full ${ac.bg} border ${ac.border} flex items-center justify-center mx-auto mb-4`}
+                  >
                     <Send size={28} className={ac.text} />
                   </div>
-                  <p className="text-white font-bold text-lg mb-1">Enquiry Sent!</p>
-                  <p className="text-white/40 text-sm">Our sales team will reach you shortly.</p>
+                  <p className="text-white font-bold text-lg mb-1">
+                    Enquiry Sent!
+                  </p>
+                  <p className="text-white/40 text-sm">
+                    Our sales team will reach you shortly.
+                  </p>
                 </div>
               ) : (
-                <form onSubmit={handleSend} id="order-enquiry-form" className="space-y-4">
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Your Contact Details</p>
+                <form
+                  onSubmit={handleSend}
+                  id="order-enquiry-form"
+                  className="space-y-4"
+                >
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">
+                    Your Contact Details
+                  </p>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-white/40 text-xs mb-1 block">Full Name *</label>
+                      <label className="text-white/40 text-xs mb-1 block">
+                        Full Name *
+                      </label>
                       <input
                         id="order-name"
                         required
                         value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, name: e.target.value })
+                        }
                         placeholder="John Silva"
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-white/40 text-xs mb-1 block">Phone *</label>
+                      <label className="text-white/40 text-xs mb-1 block">
+                        Phone *
+                      </label>
                       <input
                         id="order-phone"
                         required
                         value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, phone: e.target.value })
+                        }
                         placeholder="+94 77 000 0000"
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors"
                       />
@@ -351,24 +474,32 @@ export default function CategoryPageLayout({
                   </div>
 
                   <div>
-                    <label className="text-white/40 text-xs mb-1 block">Email</label>
+                    <label className="text-white/40 text-xs mb-1 block">
+                      Email
+                    </label>
                     <input
                       id="order-email"
                       type="email"
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       placeholder="you@example.com"
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="text-white/40 text-xs mb-1 block">Additional Notes</label>
+                    <label className="text-white/40 text-xs mb-1 block">
+                      Additional Notes
+                    </label>
                     <textarea
                       id="order-notes"
                       rows={3}
                       value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, notes: e.target.value })
+                      }
                       placeholder="Delivery address, quantity preferences, etc."
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors resize-none"
                     />

@@ -23,21 +23,25 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+          scrolled
             ? "bg-site-bg/95 backdrop-blur-xl border-b border-white/8 shadow-2xl shadow-black/30"
             : "bg-transparent"
-          }`}
+        }`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 lg:px-16 py-4">
-
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
             <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-linear-to-br from-brand to-brand-dark shadow-lg shadow-brand-glow group-hover:shadow-brand transition-shadow duration-300">
               <Layers size={17} strokeWidth={2} className="text-white" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-white font-bold text-[15px] tracking-wide">ISDN</span>
-              <span className="text-[10px] text-white/40 font-medium tracking-wider uppercase">IslandLink Network</span>
+              <span className="text-white font-bold text-[15px] tracking-wide">
+                ISDN
+              </span>
+              <span className="text-[10px] text-white/40 font-medium tracking-wider uppercase">
+                IslandLink Network
+              </span>
             </div>
           </a>
 
@@ -57,11 +61,17 @@ const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login" className="text-sm text-white/60 hover:text-white font-medium px-4 py-2 transition-colors duration-200">
+            <Link
+              to="/login"
+              className="text-sm text-white/60 hover:text-white font-medium px-4 py-2 transition-colors duration-200"
+            >
               Sign In
             </Link>
-            <Link to="/register" className="bg-brand text-brand-on px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand-glow hover:shadow-brand hover:-translate-y-0.5">
-              Get Started
+            <Link
+              to="/register"
+              className="bg-brand text-brand-on px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand-glow hover:shadow-brand hover:-translate-y-0.5"
+            >
+              Dashboard
             </Link>
           </div>
 
@@ -78,16 +88,20 @@ const Navbar = () => {
 
       {/* Mobile overlay */}
       <div
-        className={`md:hidden fixed inset-0 z-[100] transition-all duration-400 ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
+        className={`md:hidden fixed inset-0 z-[100] transition-all duration-400 ${
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
       >
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-72 bg-[#0d1117] border-l border-white/10 flex flex-col pt-20 px-6 pb-10 gap-2 transition-transform duration-400 ${mobileOpen ? "translate-x-0" : "translate-x-full"
-            }`}
+          className={`absolute right-0 top-0 h-full w-72 bg-[#0d1117] border-l border-white/10 flex flex-col pt-20 px-6 pb-10 gap-2 transition-transform duration-400 ${
+            mobileOpen ? "translate-x-0" : "translate-x-full"
+          }`}
         >
           <button
             onClick={() => setMobileOpen(false)}
@@ -114,14 +128,20 @@ const Navbar = () => {
             </a>
           ))}
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Link to="/login" className="text-center py-3 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-sm font-medium transition">
-                  Sign In
-                </Link>
-                <Link to="/register" className="text-center py-3 rounded-xl bg-brand text-brand-on text-sm font-semibold hover:bg-brand-dark transition">
-                  Get Started
-                </Link>
-            </div>
+          <div className="mt-6 flex flex-col gap-3">
+            <Link
+              to="/login"
+              className="text-center py-3 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-sm font-medium transition"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/register"
+              className="text-center py-3 rounded-xl bg-brand text-brand-on text-sm font-semibold hover:bg-brand-dark transition"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </div>
     </>
