@@ -1,4 +1,5 @@
 import { ChevronRight, Package, CupSoda, SprayCan, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import packagedFoodsImg from "../assets/categories/packaged_foods.png";
 import beveragesImg from "../assets/categories/beverages.png";
@@ -16,6 +17,7 @@ const categories = [
     border: "border-orange-500/20",
     glow: "hover:shadow-orange-500/10",
     overlay: "from-[#080b10] via-[#080b10]/90 to-transparent",
+    link: "/packaged-food",
   },
   {
     icon: CupSoda,
@@ -27,6 +29,7 @@ const categories = [
     border: "border-blue-500/20",
     glow: "hover:shadow-blue-500/10",
     overlay: "from-[#080b10] via-[#080b10]/90 to-transparent",
+    link: "/beverages",
   },
   {
     icon: SprayCan,
@@ -38,6 +41,7 @@ const categories = [
     border: "border-violet-500/20",
     glow: "hover:shadow-violet-500/10",
     overlay: "from-[#080b10] via-[#080b10]/90 to-transparent",
+    link: "/cleaning",
   },
   {
     icon: Sparkles,
@@ -49,17 +53,22 @@ const categories = [
     border: "border-pink-500/20",
     glow: "hover:shadow-pink-500/10",
     overlay: "from-[#080b10] via-[#080b10]/90 to-transparent",
+    link: "/personal-care",
   },
 ];
 
 const Categories = () => {
   return (
-    <section id="categories" className="bg-site-bg py-28 scroll-mt-20 border-t border-white/5">
+    <section
+      id="categories"
+      className="bg-site-bg py-28 scroll-mt-20 border-t border-white/5"
+    >
       <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16">
-
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-brand mb-3">Product Catalogue</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-brand mb-3">
+            Product Catalogue
+          </p>
           <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-5">
             Four Core Product Categories
           </h2>
@@ -72,9 +81,10 @@ const Categories = () => {
         {/* Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {categories.map((cat, i) => (
-            <div
+            <Link
+              to={cat.link}
               key={i}
-              className={`group relative border ${cat.border} rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl ${cat.glow} transition-all duration-400 cursor-default`}
+              className={`group relative border ${cat.border} rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl ${cat.glow} transition-all duration-400 block`}
             >
               {/* Background image */}
               <img
@@ -83,7 +93,9 @@ const Categories = () => {
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
 
-              <div className={`absolute bottom-0 left-0 right-0 h-[80%] pointer-events-none bg-linear-to-t ${cat.overlay}`} />
+              <div
+                className={`absolute bottom-0 left-0 right-0 h-[80%] pointer-events-none bg-linear-to-t ${cat.overlay}`}
+              />
 
               {/* Content */}
               <div className="relative z-10 p-6 flex flex-col h-full min-h-[380px]">
@@ -116,26 +128,43 @@ const Categories = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* Stats strip */}
         <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-dark-card rounded-3xl border border-dark-border p-8">
           <div>
-            <div className="text-3xl font-extrabold text-white mb-1">3,300+ <span className="text-brand">SKUs</span></div>
-            <p className="text-white/40 text-sm">Total products available across all four categories</p>
+            <div className="text-3xl font-extrabold text-white mb-1">
+              3,300+ <span className="text-brand">SKUs</span>
+            </div>
+            <p className="text-white/40 text-sm">
+              Total products available across all four categories
+            </p>
           </div>
+
           <div className="h-12 w-px bg-white/8 hidden md:block" />
+
           <div>
-            <div className="text-3xl font-extrabold text-white mb-1">5,000+ <span className="text-brand">Outlets</span></div>
-            <p className="text-white/40 text-sm">Active retail partners receiving regular deliveries</p>
+            <div className="text-3xl font-extrabold text-white mb-1">
+              5,000+ <span className="text-brand">Outlets</span>
+            </div>
+            <p className="text-white/40 text-sm">
+              Active retail partners receiving regular deliveries
+            </p>
           </div>
+
           <div className="h-12 w-px bg-white/8 hidden md:block" />
+
           <div>
-            <div className="text-3xl font-extrabold text-white mb-1">5 <span className="text-brand">Regions</span></div>
-            <p className="text-white/40 text-sm">Distribution centres covering the entire island</p>
+            <div className="text-3xl font-extrabold text-white mb-1">
+              5 <span className="text-brand">Regions</span>
+            </div>
+            <p className="text-white/40 text-sm">
+              Distribution centres covering the entire island
+            </p>
           </div>
+
           <button
             id="categories-contact-btn"
             className="ml-auto md:ml-0 bg-brand hover:bg-brand-dark text-brand-on px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-brand-glow hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300 whitespace-nowrap"

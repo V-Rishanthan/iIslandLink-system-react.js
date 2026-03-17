@@ -8,13 +8,17 @@ import Testimonials from "./components/Testimonials";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import PersonalCare from "./screen/PersonalCare";
+import Cleaning from "./screen/Cleaning";
+import PackagedFoods from "./screen/PackagedFoods";
+import Beverages from "./screen/Beverages";
 
 function LandingLayout() {
   return (
     <main className="min-h-screen bg-site-bg flex flex-col font-sans">
       <Navbar />
       <Hero />
-      <About />
+      {/* <About /> */}
       <Categories />
       <Features />
       <Testimonials />
@@ -30,6 +34,10 @@ function App() {
         <Route path="/" element={<LandingLayout />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/personal-care" element={<PersonalCare />} />
+        <Route path="/cleaning" element={<Cleaning />} />
+        <Route path="/packaged-food" element={<PackagedFoods />} />
+        <Route path="/beverages" element={<Beverages />} />
       </Routes>
     </BrowserRouter>
   );
