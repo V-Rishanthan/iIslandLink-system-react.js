@@ -13,6 +13,7 @@ import Cleaning from "./screen/Cleaning";
 import PackagedFoods from "./screen/PackagedFoods";
 import Beverages from "./screen/Beverages";
 import CustomerHistory from "./screen/users/CustomerHistory";
+import DeliveryBoy from "./screen/users/DeliveryBoy";
 
 function LandingLayout() {
   return (
@@ -39,7 +40,8 @@ function App() {
         <Route path="/cleaning" element={<Cleaning />} />
         <Route path="/packaged-food" element={<PackagedFoods />} />
         <Route path="/beverages" element={<Beverages />} />
-        <Route path="/customer-history:id" element={<CustomerHistory />} />
+        <Route path="/customer-history" element={<CustomerHistory />} />
+        <Route path="/delivery-boy" element={<DeliveryBoy />} />
       </Routes>
     </BrowserRouter>
   );

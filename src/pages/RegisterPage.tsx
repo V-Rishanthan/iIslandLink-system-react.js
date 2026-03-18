@@ -4,7 +4,6 @@ import {
   Layers,
   Store,
   Building2,
-  UserCog,
   ChevronRight,
   ArrowLeft,
   User,
@@ -13,7 +12,6 @@ import {
   Mail,
   MapPinned,
   Lock,
-  CreditCard,
   Hash,
   CheckCircle2,
 } from "lucide-react";
@@ -28,7 +26,7 @@ import {
 
 /* ─────────────────────────────────── Types ─────────────────────────────── */
 
-type RoleKey = "retail-customer" | "rdc-staff" | "head-office";
+type RoleKey = "retail-customer" | "rdc-staff";
 
 const roleCards = [
   {
@@ -44,13 +42,6 @@ const roleCards = [
     desc: "Regional distribution centre staff managing stock and deliveries.",
     icon: Building2,
     tag: "Inventory & dispatch",
-  },
-  {
-    role: "head-office" as RoleKey,
-    title: "Head Office Manager",
-    desc: "Management team overseeing sales, reporting and operations.",
-    icon: UserCog,
-    tag: "Analytics & oversight",
   },
 ];
 
@@ -118,10 +109,7 @@ const RetailCustomerFields = () => (
       <p className="text-[11px] text-brand font-bold uppercase tracking-widest">Business Identity</p>
     </div>
 
-    <FieldWrapper>
-      <FieldLabel>Customer ID</FieldLabel>
-      <IconInput id="customerId" icon={Hash} placeholder="Auto-generated on approval" hint="Assigned by system — no input needed" />
-    </FieldWrapper>
+
     <FieldWrapper>
       <FieldLabel>Business Name</FieldLabel>
       <IconInput id="businessName" icon={Briefcase} placeholder="ABC Supermarket" />
@@ -202,25 +190,6 @@ const RetailCustomerFields = () => (
     </FieldWrapper>
 
     <div className="border-b border-white/5 pb-3 mb-1 mt-2">
-      <p className="text-[11px] text-brand font-bold uppercase tracking-widest">Payment & Credit</p>
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <FieldWrapper>
-        <FieldLabel>Payment Method</FieldLabel>
-        <SelectField placeholder="Select method">
-          <SelectItem value="cash">Cash</SelectItem>
-          <SelectItem value="cheque">Cheque</SelectItem>
-          <SelectItem value="online">Online Transfer</SelectItem>
-        </SelectField>
-      </FieldWrapper>
-      <FieldWrapper>
-        <FieldLabel>Credit Limit</FieldLabel>
-        <IconInput id="creditLimit" icon={CreditCard} placeholder="e.g. LKR 50,000" hint="Approved credit ceiling" />
-      </FieldWrapper>
-    </div>
-
-    <div className="border-b border-white/5 pb-3 mb-1 mt-2">
       <p className="text-[11px] text-brand font-bold uppercase tracking-widest">Portal Login</p>
     </div>
 
@@ -235,13 +204,6 @@ const RetailCustomerFields = () => (
       </FieldWrapper>
     </div>
 
-    <FieldWrapper>
-      <FieldLabel>Account Status</FieldLabel>
-      <SelectField placeholder="Initial account status">
-        <SelectItem value="active">Active</SelectItem>
-        <SelectItem value="suspended">Suspended</SelectItem>
-      </SelectField>
-    </FieldWrapper>
   </div>
 );
 
@@ -333,94 +295,9 @@ const RdcStaffFields = () => (
   </div>
 );
 
-const HeadOfficeFields = () => (
-  <div className="flex flex-col gap-4">
-    <div className="border-b border-white/5 pb-3 mb-1">
-      <p className="text-[11px] text-brand font-bold uppercase tracking-widest">Manager Identity</p>
-    </div>
-
-    <FieldWrapper>
-      <FieldLabel>Manager ID</FieldLabel>
-      <IconInput id="managerId" icon={Hash} placeholder="Auto-generated on approval" hint="Assigned by system" />
-    </FieldWrapper>
-
-    <div className="grid grid-cols-2 gap-4">
-      <FieldWrapper>
-        <FieldLabel>First Name</FieldLabel>
-        <IconInput id="managerFirst" icon={User} placeholder="First name" />
-      </FieldWrapper>
-      <FieldWrapper>
-        <FieldLabel>Last Name</FieldLabel>
-        <IconInput id="managerLast" icon={User} placeholder="Last name" />
-      </FieldWrapper>
-    </div>
-
-    <FieldWrapper>
-      <FieldLabel>Department</FieldLabel>
-      <SelectField placeholder="Select department">
-        <SelectItem value="procurement">Procurement</SelectItem>
-        <SelectItem value="operations">Operations</SelectItem>
-        <SelectItem value="finance">Finance</SelectItem>
-        <SelectItem value="logistics">Logistics</SelectItem>
-        <SelectItem value="hr">Human Resources</SelectItem>
-        <SelectItem value="it">IT & Systems</SelectItem>
-      </SelectField>
-    </FieldWrapper>
-
-    <FieldWrapper>
-      <FieldLabel>Designation / Title</FieldLabel>
-      <IconInput id="designation" icon={Briefcase} placeholder="e.g. Operations Manager" />
-    </FieldWrapper>
-
-    <div className="grid grid-cols-2 gap-4">
-      <FieldWrapper>
-        <FieldLabel>Direct Phone</FieldLabel>
-        <IconInput id="managerPhone" icon={Phone} placeholder="+94 11 000 0000" hint="Direct line" />
-      </FieldWrapper>
-      <FieldWrapper>
-        <FieldLabel>Corporate Email</FieldLabel>
-        <IconInput id="managerEmail" icon={Mail} type="email" placeholder="manager@islandlink.com" />
-      </FieldWrapper>
-    </div>
-
-    <div className="border-b border-white/5 pb-3 mb-1 mt-2">
-      <p className="text-[11px] text-brand font-bold uppercase tracking-widest">System Access</p>
-    </div>
-
-    <FieldWrapper>
-      <FieldLabel>Access Level</FieldLabel>
-      <SelectField placeholder="Select access scope">
-        <SelectItem value="full">Full Access</SelectItem>
-        <SelectItem value="read-only">Read Only</SelectItem>
-        <SelectItem value="dept-specific">Department-Specific</SelectItem>
-      </SelectField>
-    </FieldWrapper>
-
-    <div className="grid grid-cols-2 gap-4">
-      <FieldWrapper>
-        <FieldLabel>Password</FieldLabel>
-        <IconInput id="managerPassword" icon={Lock} type="password" placeholder="Create password" />
-      </FieldWrapper>
-      <FieldWrapper>
-        <FieldLabel>Confirm Password</FieldLabel>
-        <IconInput id="managerConfirmPassword" icon={Lock} type="password" placeholder="Confirm" />
-      </FieldWrapper>
-    </div>
-
-    <FieldWrapper>
-      <FieldLabel>Account Status</FieldLabel>
-      <SelectField placeholder="Initial status">
-        <SelectItem value="active">Active</SelectItem>
-        <SelectItem value="inactive">Inactive</SelectItem>
-      </SelectField>
-    </FieldWrapper>
-  </div>
-);
-
 const fieldComponents: Record<RoleKey, React.ReactNode> = {
   "retail-customer": <RetailCustomerFields />,
   "rdc-staff":       <RdcStaffFields />,
-  "head-office":     <HeadOfficeFields />,
 };
 
 /* ───────────────────────────── Page ───────────────────────────────────── */
