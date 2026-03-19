@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { useAppSelector } from "../store/hooks";
 import { toast } from "react-toastify";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { useNavigate } from "react-router-dom";
 
 export interface Product {
   id: number;
@@ -93,6 +96,7 @@ export default function CategoryPageLayout({
 }: Props) {
   const ac = ACCENT_CLASSES[accentColor] ?? ACCENT_CLASSES.violet;
   const auth = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -104,7 +108,9 @@ export default function CategoryPageLayout({
     email: "",
     notes: "",
   });
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (auth.name || auth.phone || auth.email || auth.businessName) {
@@ -153,15 +159,45 @@ export default function CategoryPageLayout({
     setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
   }
 
-  function handleSend(e: React.FormEvent) {
+  async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => {
-      setSent(false);
-      setOrderOpen(false);
-      setCart([]);
-      setForm({ name: "", phone: "", email: "", notes: "" });
-    }, 2800);
+    if (!auth.uid) return;
+
+    setIsSubmitting(true);
+    try {
+      const orderData = {
+        customerId: auth.uid,
+        customerName: form.name,
+        customerPhone: form.phone,
+        customerEmail: form.email,
+        customerBusiness: auth.businessName || null,
+        notes: form.notes,
+        items: cart,
+        subTotal,
+        paymentMethod,
+        status: paymentMethod === "cash" ? "pending_delivery" : "pending_payment",
+        createdAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, "orders"), orderData);
+
+      if (paymentMethod === "card") {
+        setOrderOpen(false);
+        navigate(`/payment?orderId=${docRef.id}&amount=${subTotal}`);
+      } else {
+        setSent(true);
+        setTimeout(() => {
+          setSent(false);
+          setOrderOpen(false);
+          setCart([]);
+          setForm({ name: "", phone: "", email: "", notes: "" });
+        }, 2800);
+      }
+    } catch (err) {
+      toast.error("Failed to place order. Try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function parsePrice(priceStr: string): number {
@@ -264,11 +300,10 @@ export default function CategoryPageLayout({
               <button
                 key={c}
                 onClick={() => setSelectedCategory(c)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                  selectedCategory === c
-                    ? `${ac.btn} text-white shadow-sm`
-                    : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${selectedCategory === c
+                  ? `${ac.btn} text-white shadow-sm`
+                  : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                  }`}
               >
                 {c}
               </button>
@@ -332,11 +367,10 @@ export default function CategoryPageLayout({
                     <button
                       id={`add-to-cart-${p.id}`}
                       onClick={() => addToCart(p)}
-                      className={`mt-auto w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                        inCart
-                          ? "bg-white/10 border border-white/15"
-                          : `${ac.btn}`
-                      }`}
+                      className={`mt-auto w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all duration-200 ${inCart
+                        ? "bg-white/10 border border-white/15"
+                        : `${ac.btn}`
+                        }`}
                     >
                       {inCart ? (
                         <>
@@ -556,19 +590,65 @@ export default function CategoryPageLayout({
                     />
                   </div>
 
+                  {/* Payment Method Selection */}
+                  <div>
+                    <label className="text-white/40 text-xs mb-2 block uppercase tracking-wider font-semibold">
+                      Payment Method
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label
+                        className={`cursor-pointer flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${paymentMethod === "cash"
+                          ? "bg-white/10 border-white/30 text-white"
+                          : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment"
+                          value="cash"
+                          checked={paymentMethod === "cash"}
+                          onChange={() => setPaymentMethod("cash")}
+                          className="accent-brand"
+                        />
+                        <span className="text-sm font-medium">Cash on Delivery</span>
+                      </label>
+                      <label
+                        className={`cursor-pointer flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${paymentMethod === "card"
+                          ? "bg-white/10 border-white/30 text-white"
+                          : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment"
+                          value="card"
+                          checked={paymentMethod === "card"}
+                          onChange={() => setPaymentMethod("card")}
+                          className="accent-brand"
+                        />
+                        <span className="text-sm font-medium">Card Payment</span>
+                      </label>
+                    </div>
+                  </div>
+
                   <button
                     id="submit-order-btn"
                     type="submit"
-                    disabled={cart.length === 0}
-                    className={`w-full py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-                      cart.length === 0
-                        ? "opacity-40 cursor-not-allowed bg-white/10"
-                        : `${ac.btn} shadow-lg ${ac.shadow} hover:-translate-y-0.5`
-                    }`}
+                    disabled={cart.length === 0 || isSubmitting}
+                    className={`w-full py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${cart.length === 0 || isSubmitting
+                      ? "opacity-40 cursor-not-allowed bg-white/10"
+                      : `${ac.btn} shadow-lg ${ac.shadow} hover:-translate-y-0.5`
+                      }`}
                   >
-                    <Send size={15} />
-                    Send Enquiry
-                    <ChevronRight size={15} />
+                    {isSubmitting ? (
+                      <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    ) : (
+                      <>
+                        <Send size={15} />
+                        {paymentMethod === "card" ? "Proceed to Payment" : "Place Order"}
+                        <ChevronRight size={15} />
+                      </>
+                    )}
                   </button>
                 </form>
               )}

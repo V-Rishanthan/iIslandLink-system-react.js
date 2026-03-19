@@ -22,6 +22,7 @@ import PackagedFoods from "./screen/PackagedFoods";
 import Beverages from "./screen/Beverages";
 import CustomerHistory from "./screen/users/CustomerHistory";
 import DeliveryBoy from "./screen/users/DeliveryBoy";
+import PaymentPage from "./pages/PaymentPage";
 
 function LandingLayout() {
   return (
@@ -101,6 +102,7 @@ function App() {
         <Route path="/beverages" element={<Beverages />} />
         <Route path="/customer-history" element={<CustomerHistory />} />
         <Route path="/delivery-boy" element={<DeliveryBoy />} />
+        <Route path="/payment" element={<PaymentPage />} />
       </Routes>
     </BrowserRouter>
   );

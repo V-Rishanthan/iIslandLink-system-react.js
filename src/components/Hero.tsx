@@ -26,9 +26,6 @@ const Hero = () => {
   const auth = useAppSelector((state) => state.auth);
 
 
-
-
-
   return (
     <section
       id="home"
