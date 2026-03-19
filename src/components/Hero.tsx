@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   UserCog,
 } from "lucide-react";
+import { useAppSelector } from "../store/hooks";
 
 const stats = [
   { value: "5,000+", label: "Active Retail Partners", icon: Store },
@@ -19,30 +20,15 @@ const stats = [
   { value: "4 Categories", label: "FMCG Product Lines", icon: Package },
 ];
 
-const roleCards = [
-  {
-    title: "Retail Customer",
-    desc: "Retailers, supermarkets, and resellers placing product orders.",
-    icon: Store,
-  },
-  {
-    title: "RDC Staff",
-    desc: "Regional distribution centre staff managing stock and deliveries.",
-    icon: Building2,
-  },
-  {
-    title: "Head Office Manager",
-    desc: "Management team monitoring sales, reporting, and operations.",
-    icon: UserCog,
-  },
-  {
-    title: "Admin",
-    desc: "Full system administration and user management access.",
-    icon: ShieldCheck,
-  },
-];
-
 const Hero = () => {
+
+  // Get the entire auth state
+  const auth = useAppSelector((state) => state.auth);
+
+
+
+
+
   return (
     <section
       id="home"
@@ -98,23 +84,35 @@ const Hero = () => {
 
         {/* CTAs — navigate to dedicated pages */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-20">
-          <Link
-            to="/login"
-            id="hero-login-btn"
-            className="group flex items-center gap-2 bg-brand text-brand-on px-7 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-glow hover:shadow-brand hover:bg-brand-dark hover:-translate-y-0.5 transition-all duration-300"
-          >
-            Login to Portal
-            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+          {auth.uid ? (
+            <Link
+              to={auth.role === 'retail-customer' ? "/customer-history" : auth.role === 'rdc-staff' ? "/delivery-boy" : "/dashboard"}
+              className="group flex items-center gap-2 bg-brand text-brand-on px-7 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-glow hover:shadow-brand hover:bg-brand-dark hover:-translate-y-0.5 transition-all duration-300"
+            >
+              {auth.role === 'retail-customer' ? "Go to Order History" : auth.role === 'rdc-staff' ? "Go to Deliveries" : "Go to Dashboard"}
+              <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                id="hero-login-btn"
+                className="group flex items-center gap-2 bg-brand text-brand-on px-7 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-glow hover:shadow-brand hover:bg-brand-dark hover:-translate-y-0.5 transition-all duration-300"
+              >
+                Login to Portal
+                <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
 
-          <Link
-            to="/register"
-            id="hero-register-btn"
-            className="group flex items-center gap-2 border border-white/10 hover:border-brand-border bg-white/5 hover:bg-brand-subtle text-white px-7 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300"
-          >
-            Register Account
-            <UserPlus size={16} className="text-white/40 group-hover:text-brand transition" />
-          </Link>
+              <Link
+                to="/register"
+                id="hero-register-btn"
+                className="group flex items-center gap-2 border border-white/10 hover:border-brand-border bg-white/5 hover:bg-brand-subtle text-white px-7 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300"
+              >
+                Register Account
+                <UserPlus size={16} className="text-white/40 group-hover:text-brand transition" />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Platform at a Glance divider */}
@@ -145,19 +143,7 @@ const Hero = () => {
           ))}
         </div>
 
-        {/* Role cards */}
-        <div className="w-full max-w-5xl mt-16 grid md:grid-cols-4 gap-4">
-          {roleCards.map((role, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-white/8 bg-white/4 p-5 text-left hover:border-brand-border hover:bg-brand-subtle transition-all duration-300 group"
-            >
-              <role.icon size={22} className="text-brand mb-3 group-hover:scale-110 transition-transform duration-300" />
-              <h3 className="text-sm font-semibold text-white mb-2">{role.title}</h3>
-              <p className="text-xs text-white/45 leading-6">{role.desc}</p>
-            </div>
-          ))}
-        </div>
+
 
         {/* Scroll indicator */}
         <div className="flex flex-col items-center gap-2 mt-16 animate-bounce cursor-pointer opacity-40 hover:opacity-70 transition-opacity">

@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, Layers } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, Layers, LogOut } from "lucide-react";
+import { useAppSelector } from "../store/hooks";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase/config";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  const user = useAppSelector((state) => state.auth);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setMobileOpen(false);
+    navigate("/login");
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -23,11 +34,10 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-          scrolled
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled
             ? "bg-site-bg/95 backdrop-blur-xl border-b border-white/8 shadow-2xl shadow-black/30"
             : "bg-transparent"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 lg:px-16 py-4">
           {/* Logo */}
@@ -61,18 +71,42 @@ const Navbar = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/login"
-              className="text-sm text-white/60 hover:text-white font-medium px-4 py-2 transition-colors duration-200"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="bg-brand text-brand-on px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand-glow hover:shadow-brand hover:-translate-y-0.5"
-            >
-              Dashboard
-            </Link>
+            {user.uid ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  to={user.role === 'retail-customer' ? "/customer-history" : user.role === 'rdc-staff' ? "/delivery-boy" : "/dashboard"}
+                  className="text-sm text-white/80 hover:text-white font-medium transition-colors duration-200"
+                >
+                  Dashboard
+                </Link>
+                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-brand text-brand-on font-bold uppercase shadow-md shadow-brand-glow">
+                  {(user.name && user.name[0]) || (user.email && user.email[0]) || "U"}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 bg-white/5 hover:bg-red-500/10 text-white/70 hover:text-red-400 border border-white/10 hover:border-red-500/30 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                  title="Logout"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm text-white/60 hover:text-white font-medium px-4 py-2 transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-brand text-brand-on px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand-glow hover:shadow-brand hover:-translate-y-0.5"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Hamburger */}
@@ -88,20 +122,18 @@ const Navbar = () => {
 
       {/* Mobile overlay */}
       <div
-        className={`md:hidden fixed inset-0 z-[100] transition-all duration-400 ${
-          mobileOpen
+        className={`md:hidden fixed inset-0 z-100 transition-all duration-400 ${mobileOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
-        }`}
+          }`}
       >
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-72 bg-[#0d1117] border-l border-white/10 flex flex-col pt-20 px-6 pb-10 gap-2 transition-transform duration-400 ${
-            mobileOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute right-0 top-0 h-full w-72 bg-[#0d1117] border-l border-white/10 flex flex-col pt-20 px-6 pb-10 gap-2 transition-transform duration-400 ${mobileOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           <button
             onClick={() => setMobileOpen(false)}
@@ -129,18 +161,41 @@ const Navbar = () => {
           ))}
 
           <div className="mt-6 flex flex-col gap-3">
-            <Link
-              to="/login"
-              className="text-center py-3 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-sm font-medium transition"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="text-center py-3 rounded-xl bg-brand text-brand-on text-sm font-semibold hover:bg-brand-dark transition"
-            >
-              Get Started
-            </Link>
+            {user.uid ? (
+              <>
+                <Link
+                  to={user.role === 'retail-customer' ? "/customer-history" : user.role === 'rdc-staff' ? "/delivery-boy" : "/dashboard"}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-center py-3 rounded-xl bg-brand/20 border border-brand/50 text-white hover:bg-brand/30 text-sm font-medium transition"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 text-white/70 hover:text-red-400 hover:border-red-500/30 text-sm font-medium transition"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-center py-3 rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-sm font-medium transition"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-center py-3 rounded-xl bg-brand text-brand-on text-sm font-semibold hover:bg-brand-dark transition"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -8,6 +8,8 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
+import { useAppSelector } from "../store/hooks";
+import { toast } from "react-toastify";
 
 export interface Product {
   id: number;
@@ -90,6 +92,7 @@ export default function CategoryPageLayout({
   backPath = "/",
 }: Props) {
   const ac = ACCENT_CLASSES[accentColor] ?? ACCENT_CLASSES.violet;
+  const auth = useAppSelector((state) => state.auth);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -102,6 +105,17 @@ export default function CategoryPageLayout({
     notes: "",
   });
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (auth.name || auth.phone || auth.email || auth.businessName) {
+      setForm((prev) => ({
+        ...prev,
+        name: auth.businessName || auth.name || prev.name,
+        phone: auth.phone || prev.phone,
+        email: auth.email || prev.email,
+      }));
+    }
+  }, [auth.name, auth.phone, auth.email, auth.businessName]);
 
   const categories = [
     "All",
@@ -118,6 +132,10 @@ export default function CategoryPageLayout({
   });
 
   function addToCart(p: Product) {
+    if (!auth.uid) {
+      toast.error("First login or register to add items.");
+      return;
+    }
     setCart((prev) => {
       const existing = prev.find((i) => i.id === p.id);
       if (existing)
@@ -146,7 +164,18 @@ export default function CategoryPageLayout({
     }, 2800);
   }
 
+  function parsePrice(priceStr: string): number {
+    const numericStr = priceStr.replace(/[^0-9.]/g, "");
+    const val = parseFloat(numericStr);
+    return isNaN(val) ? 0 : val;
+  }
+
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+  const subTotal = cart.reduce((s, i) => s + parsePrice(i.price) * i.qty, 0);
+  const formattedSubTotal = `LKR ${subTotal.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
   return (
     <div className="min-h-screen bg-[#08080C] font-sans">
@@ -176,7 +205,13 @@ export default function CategoryPageLayout({
           {/* Floating cart pill */}
           <button
             id="open-order-btn"
-            onClick={() => setOrderOpen(true)}
+            onClick={() => {
+              if (!auth.uid) {
+                toast.error("First login or register to view your order enquiry.");
+                return;
+              }
+              setOrderOpen(true);
+            }}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-full ${ac.btn} text-white text-sm font-semibold shadow-lg ${ac.shadow} transition-all duration-300 hover:-translate-y-0.5`}
           >
             <ShoppingCart size={16} />
@@ -415,6 +450,14 @@ export default function CategoryPageLayout({
               {/* Divider */}
               <div className="border-t border-white/8" />
 
+              {/* Subtotal */}
+              {cart.length > 0 && !sent && (
+                <div className="flex items-center justify-between pb-2">
+                  <span className="text-white/60 font-semibold text-sm">Estimated Subtotal</span>
+                  <span className={`text-lg font-bold ${ac.text}`}>{formattedSubTotal}</span>
+                </div>
+              )}
+
               {/* Contact form */}
               {sent ? (
                 <div className="text-center py-10">
@@ -436,9 +479,17 @@ export default function CategoryPageLayout({
                   id="order-enquiry-form"
                   className="space-y-4"
                 >
-                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">
+                  <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">
                     Your Contact Details
                   </p>
+
+                  {(auth.businessName || auth.district || auth.province || auth.phone) && (
+                    <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-xs text-white/70 mb-4 space-y-1">
+                      {auth.businessName && <p><span className="text-white/40">Business:</span> <span className="font-semibold text-white">{auth.businessName}</span></p>}
+                      {(auth.district || auth.province) && <p><span className="text-white/40">Location:</span> <span className="font-semibold text-white">{auth.district || ""}{auth.district && auth.province ? ", " : ""}{auth.province || ""}</span></p>}
+                      {auth.phone && <p><span className="text-white/40">Phone:</span> <span className="font-semibold text-white">{auth.phone}</span></p>}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>

@@ -1,6 +1,7 @@
-
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+// import { getAnalytics } from "firebase/analytics";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAMqJGGi9y9g6p5jVyNBUZ-kvk4ywMrZ-k",
@@ -14,4 +15,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+// keep user logged in even after browser restart
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log("Auth persistence set to LOCAL");
+  })
+  .catch((error) => {
+    console.error("Persistence error:", error);
+  });

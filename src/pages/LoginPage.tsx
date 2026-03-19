@@ -1,5 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase/config";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setUser } from "../store/slices/authSlice";
 import { Layers, Mail, Lock, ArrowRight, Store, Building2, UserCog, ShieldCheck } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -13,19 +18,81 @@ import {
 
 const roles = [
   { value: "retail-customer", label: "Retail Customer", icon: Store },
-  { value: "rdc-staff",       label: "RDC Staff",        icon: Building2 },
-  { value: "head-office",     label: "Head Office Manager", icon: UserCog },
-  { value: "admin",           label: "Admin",            icon: ShieldCheck },
+  { value: "rdc-staff", label: "RDC Staff", icon: Building2 },
+  { value: "head-office", label: "Head Office Manager", icon: UserCog },
+  { value: "admin", label: "Admin", icon: ShieldCheck },
 ];
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { role: currentRole, uid } = useAppSelector((state) => state.auth);
   const [role, setRole] = useState("");
+  const [errorString, setErrorString] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (uid && currentRole) {
+      if (currentRole === 'retail-customer') navigate('/customer-history');
+      else if (currentRole === 'rdc-staff') navigate('/delivery-boy');
+      else navigate('/dashboard');
+    }
+  }, [uid, currentRole, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire to real auth
-    navigate("/");
+    if (!role) {
+      setErrorString("Please select a role to login as.");
+      return;
+    }
+    setErrorString("");
+    setLoading(true);
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const docRef = doc(db, "users", userCred.user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        if (userData.role !== role && role !== "admin") {
+          setErrorString("Role mismatch. You are registered as " + userData.role);
+          setLoading(false);
+          return;
+        }
+
+        dispatch(setUser({
+          uid: userCred.user.uid,
+          email: userCred.user.email,
+          role: userData.role,
+          name: userData.name,
+          businessName: userData.businessName || null,
+          district: userData.district || null,
+          phone: userData.phone || null,
+          province: userData.province || null
+        }));
+
+        if (userData.role === 'retail-customer') {
+          navigate('/customer-history');
+        } else if (userData.role === 'rdc-staff') {
+          navigate('/delivery-boy');
+        } else {
+          navigate('/dashboard');
+        }
+
+      } else {
+        setErrorString("User data not found in database.");
+      }
+    } catch (err: any) {
+      setErrorString(err.message || "Failed to login.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,6 +143,7 @@ const LoginPage = () => {
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     required
                     placeholder="name@islandlink.com"
@@ -91,6 +159,7 @@ const LoginPage = () => {
                   <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     required
                     placeholder="••••••••"
@@ -130,13 +199,20 @@ const LoginPage = () => {
                 </button>
               </div>
 
+              {errorString && (
+                <div className="p-3 rounded bg-red-500/10 border border-red-500/50 text-red-500 text-xs text-center">
+                  {errorString}
+                </div>
+              )}
+
               {/* Submit */}
               <button
                 type="submit"
-                className="group flex items-center justify-center gap-2 bg-brand text-brand-on h-11 rounded-xl text-sm font-bold shadow-lg shadow-brand-glow hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-brand transition-all duration-300 mt-1"
+                disabled={loading}
+                className="group flex items-center justify-center gap-2 bg-brand text-brand-on h-11 rounded-xl text-sm font-bold shadow-lg shadow-brand-glow hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-brand transition-all duration-300 mt-1 disabled:opacity-50"
               >
-                Sign In to Dashboard
-                <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                {loading ? "Signing in..." : "Sign In to Dashboard"}
+                {!loading && <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />}
               </button>
             </form>
           </div>
