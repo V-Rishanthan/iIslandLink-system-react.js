@@ -26,7 +26,7 @@ const Dashboard = () => {
           </p>
         </div>
       </header>
-      
+
       <main className="p-8">
         {role === 'retail-customer' && (
           <div className="bg-dark-card border border-dark-border p-6 rounded-2xl shadow-lg">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
-  Filter,
   ShoppingBag,
   Calendar,
   Phone,
@@ -18,11 +17,26 @@ import {
   MapPin,
   Receipt,
   Star,
+  Loader2,
 } from "lucide-react";
+import { useAppSelector } from "../../store/hooks";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type OrderStatus = "delivered" | "processing" | "shipped" | "cancelled";
+type OrderStatus =
+  | "pending_delivery"
+  | "pending_payment"
+  | "payment_complete"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 interface OrderProduct {
   id: number;
@@ -30,210 +44,26 @@ interface OrderProduct {
   sku: string;
   qty: number;
   price: string;
-  priceValue: number;
   category: string;
+  image?: string;
+  unit?: string;
 }
 
 interface Order {
-  id: string;
-  date: string;
+  id: string; // Firestore doc ID
+  createdAt: string;
   status: OrderStatus;
   customer: {
     name: string;
     phone: string;
     email: string;
-    address: string;
+    business: string | null;
   };
   products: OrderProduct[];
   notes?: string;
   total: number;
+  paymentMethod: string;
 }
-
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const ORDERS: Order[] = [
-  {
-    id: "ORD-20240312-001",
-    date: "2024-03-12",
-    status: "delivered",
-    customer: {
-      name: "Ravi Krishnamurthy",
-      phone: "+94 77 345 6789",
-      email: "ravi.k@example.com",
-      address: "45, Main Street, Colombo 03",
-    },
-    products: [
-      {
-        id: 1,
-        name: "Ajax Multi-Purpose Cleaner",
-        sku: "CL-AJX-001",
-        qty: 3,
-        price: "LKR 720",
-        priceValue: 720,
-        category: "Surface Cleaners",
-      },
-      {
-        id: 2,
-        name: "Harpic Toilet Cleaner – Power Plus",
-        sku: "CL-HRP-002",
-        qty: 2,
-        price: "LKR 480",
-        priceValue: 480,
-        category: "Bathroom Cleaning",
-      },
-      {
-        id: 3,
-        name: "Microfiber Cleaning Cloth (5 Pack)",
-        sku: "CL-CLT-014",
-        qty: 1,
-        price: "LKR 750",
-        priceValue: 750,
-        category: "Surface Cleaners",
-      },
-    ],
-    notes: "Please deliver before 6 PM.",
-    total: 4470,
-  },
-  {
-    id: "ORD-20240305-002",
-    date: "2024-03-05",
-    status: "shipped",
-    customer: {
-      name: "Shalini Fernando",
-      phone: "+94 76 123 4567",
-      email: "shalini.f@example.com",
-      address: "12, Lake Road, Kandy",
-    },
-    products: [
-      {
-        id: 4,
-        name: "Esperanza Rotary Mop – Spin Dry",
-        sku: "CL-MOP-003",
-        qty: 1,
-        price: "LKR 3,500",
-        priceValue: 3500,
-        category: "Mops & Brooms",
-      },
-      {
-        id: 5,
-        name: "Garden Hose – 30m Flexible",
-        sku: "CL-GTL-008",
-        qty: 1,
-        price: "LKR 4,200",
-        priceValue: 4200,
-        category: "Garden Tools",
-      },
-    ],
-    notes: "Fragile items – handle with care.",
-    total: 7700,
-  },
-  {
-    id: "ORD-20240228-003",
-    date: "2024-02-28",
-    status: "processing",
-    customer: {
-      name: "Nimal Perera",
-      phone: "+94 71 987 6543",
-      email: "nimal.p@example.com",
-      address: "78, Galle Road, Matara",
-    },
-    products: [
-      {
-        id: 6,
-        name: "Long Handled Dust Brush Set",
-        sku: "CL-BRS-005",
-        qty: 2,
-        price: "LKR 1,200",
-        priceValue: 1200,
-        category: "Mops & Brooms",
-      },
-      {
-        id: 7,
-        name: "All-Purpose Cleaning Spray",
-        sku: "CL-SPR-011",
-        qty: 4,
-        price: "LKR 550",
-        priceValue: 550,
-        category: "Surface Cleaners",
-      },
-    ],
-    total: 4600,
-  },
-  {
-    id: "ORD-20240215-004",
-    date: "2024-02-15",
-    status: "cancelled",
-    customer: {
-      name: "Asha Weerasinghe",
-      phone: "+94 70 555 4321",
-      email: "asha.w@example.com",
-      address: "23, Temple Lane, Gampaha",
-    },
-    products: [
-      {
-        id: 8,
-        name: "Garden Axe – Heavy Duty",
-        sku: "CL-GTL-007",
-        qty: 1,
-        price: "LKR 2,800",
-        priceValue: 2800,
-        category: "Garden Tools",
-      },
-    ],
-    notes: "Customer requested cancellation.",
-    total: 2800,
-  },
-  {
-    id: "ORD-20240201-005",
-    date: "2024-02-01",
-    status: "delivered",
-    customer: {
-      name: "Chamara Jayawardena",
-      phone: "+94 77 111 2222",
-      email: "chamara.j@example.com",
-      address: "5, Peradeniya Road, Kandy",
-    },
-    products: [
-      {
-        id: 9,
-        name: "Cotton Floor Mop – Classic",
-        sku: "CL-MOP-004",
-        qty: 2,
-        price: "LKR 850",
-        priceValue: 850,
-        category: "Mops & Brooms",
-      },
-      {
-        id: 10,
-        name: "Disinfectant Floor Cleaner 2L",
-        sku: "CL-FLC-012",
-        qty: 3,
-        price: "LKR 890",
-        priceValue: 890,
-        category: "Surface Cleaners",
-      },
-      {
-        id: 11,
-        name: "Sponge & Scourer Combo Pack",
-        sku: "CL-SCR-013",
-        qty: 5,
-        price: "LKR 320",
-        priceValue: 320,
-        category: "Scrub Brushes",
-      },
-      {
-        id: 12,
-        name: "Outdoor Stiff Sweeping Brush (Set of 2)",
-        sku: "CL-BRM-006",
-        qty: 1,
-        price: "LKR 1,950",
-        priceValue: 1950,
-        category: "Mops & Brooms",
-      },
-    ],
-    total: 9220,
-  },
-];
 
 // ── Status Helpers ─────────────────────────────────────────────────────────────
 
@@ -248,8 +78,24 @@ const STATUS_CONFIG: Record<
     dot: string;
   }
 > = {
-  delivered: {
-    label: "Delivered",
+  pending_delivery: {
+    label: "Pending Delivery",
+    icon: Clock,
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/25",
+    dot: "bg-amber-400",
+  },
+  pending_payment: {
+    label: "Pending Payment",
+    icon: Clock,
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/25",
+    dot: "bg-orange-400",
+  },
+  payment_complete: {
+    label: "Payment Complete",
     icon: CheckCircle,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
@@ -264,13 +110,13 @@ const STATUS_CONFIG: Record<
     border: "border-blue-500/25",
     dot: "bg-blue-400",
   },
-  processing: {
-    label: "Processing",
-    icon: Clock,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/25",
-    dot: "bg-amber-400",
+  delivered: {
+    label: "Delivered",
+    icon: CheckCircle,
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/25",
+    dot: "bg-emerald-400",
   },
   cancelled: {
     label: "Cancelled",
@@ -285,7 +131,7 @@ const STATUS_CONFIG: Record<
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending_delivery;
   const Icon = cfg.icon;
   return (
     <span
@@ -298,10 +144,16 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   );
 }
 
+function parsePrice(priceStr: string): number {
+  const numericStr = priceStr.replace(/[^0-9.]/g, "");
+  const val = parseFloat(numericStr);
+  return isNaN(val) ? 0 : val;
+}
+
 function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
 
-  const formattedDate = new Date(order.date).toLocaleDateString("en-US", {
+  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -325,7 +177,7 @@ function OrderCard({ order }: { order: Order }) {
           </div>
           <div>
             <p className="text-white font-bold text-sm font-mono tracking-wide">
-              {order.id}
+              {order.id.slice(0, 12).toUpperCase()}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               <Calendar size={11} className="text-white/35" />
@@ -395,9 +247,8 @@ function OrderCard({ order }: { order: Order }) {
                   {order.products.map((product, idx) => (
                     <tr
                       key={product.id}
-                      className={`border-b border-white/4 last:border-0 transition-colors hover:bg-white/2 ${
-                        idx % 2 === 0 ? "" : "bg-white/1"
-                      }`}
+                      className={`border-b border-white/4 last:border-0 transition-colors hover:bg-white/2 ${idx % 2 === 0 ? "" : "bg-white/1"
+                        }`}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -432,7 +283,7 @@ function OrderCard({ order }: { order: Order }) {
                       <td className="px-4 py-3 text-right">
                         <span className="text-violet-400 text-xs font-bold">
                           LKR{" "}
-                          {(product.priceValue * product.qty).toLocaleString()}
+                          {(parsePrice(product.price) * product.qty).toLocaleString()}
                         </span>
                       </td>
                     </tr>
@@ -489,14 +340,16 @@ function OrderCard({ order }: { order: Order }) {
                     {order.customer.email}
                   </span>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-white/6 flex items-center justify-center shrink-0 mt-0.5">
-                    <MapPin size={11} className="text-white/40" />
+                {order.customer.business && (
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-white/6 flex items-center justify-center shrink-0 mt-0.5">
+                      <MapPin size={11} className="text-white/40" />
+                    </div>
+                    <span className="text-white/65 text-xs leading-relaxed">
+                      {order.customer.business}
+                    </span>
                   </div>
-                  <span className="text-white/65 text-xs leading-relaxed">
-                    {order.customer.address}
-                  </span>
-                </div>
+                )}
               </div>
             </div>
 
@@ -510,55 +363,13 @@ function OrderCard({ order }: { order: Order }) {
                 <StatusBadge status={order.status} />
               </div>
 
-              {/* Progress Steps */}
-              <div className="flex items-center gap-1 mt-2">
-                {(["processing", "shipped", "delivered"] as OrderStatus[]).map(
-                  (step, i) => {
-                    const stepOrder = ["processing", "shipped", "delivered"];
-                    const currentIndex = stepOrder.indexOf(order.status);
-                    const stepIndex = stepOrder.indexOf(step);
-                    const isActive = stepIndex <= currentIndex;
-                    const isCancelled = order.status === "cancelled";
-                    return (
-                      <div key={step} className="flex items-center flex-1">
-                        <div
-                          className={`flex-1 h-1 rounded-full transition-all ${
-                            isCancelled
-                              ? "bg-red-500/30"
-                              : isActive
-                              ? "bg-violet-500"
-                              : "bg-white/10"
-                          } ${i === 0 ? "hidden" : ""}`}
-                        />
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold transition-all ${
-                            isCancelled
-                              ? "border-red-500/40 bg-red-500/10 text-red-400"
-                              : isActive
-                              ? "border-violet-500 bg-violet-500 text-white"
-                              : "border-white/15 bg-white/5 text-white/25"
-                          }`}
-                        >
-                          {i + 1}
-                        </div>
-                        <div
-                          className={`flex-1 h-1 rounded-full transition-all ${
-                            isCancelled
-                              ? "bg-red-500/30"
-                              : isActive && stepIndex < currentIndex
-                              ? "bg-violet-500"
-                              : "bg-white/10"
-                          } ${i === 2 ? "hidden" : ""}`}
-                        />
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-              <div className="flex justify-between text-[9px] text-white/30 px-0.5">
-                <span>Processing</span>
-                <span>Shipped</span>
-                <span>Delivered</span>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-white/40 text-xs">Payment:</p>
+                <span className="text-white/70 text-xs font-semibold capitalize">
+                  {order.paymentMethod === "card"
+                    ? "Card Payment"
+                    : "Cash on Delivery"}
+                </span>
               </div>
 
               {order.notes && (
@@ -582,34 +393,92 @@ function OrderCard({ order }: { order: Order }) {
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 const CustomerHistory = () => {
+  const auth = useAppSelector((state) => state.auth);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
 
-  const statuses: { key: "all" | OrderStatus; label: string }[] = [
-    { key: "all", label: "All Orders" },
-    { key: "processing", label: "Processing" },
-    { key: "shipped", label: "Shipped" },
-    { key: "delivered", label: "Delivered" },
-    { key: "cancelled", label: "Cancelled" },
-  ];
 
-  const filtered = ORDERS.filter((o) => {
+  // Fetch orders from Firestore filtered by logged-in customer's uid
+  useEffect(() => {
+    if (!auth.uid) {
+      setLoading(false);
+      return;
+    }
+
+    const ordersRef = collection(db, "orders");
+    const q = query(
+      ordersRef,
+      where("customerId", "==", auth.uid)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetched: Order[] = snapshot.docs.map((docSnap) => {
+          const d = docSnap.data();
+          return {
+            id: docSnap.id,
+            createdAt: d.createdAt || new Date().toISOString(),
+            status: d.status || "pending_delivery",
+            customer: {
+              name: d.customerName || "",
+              phone: d.customerPhone || "",
+              email: d.customerEmail || "",
+              business: d.customerBusiness || null,
+            },
+            products: (d.items || []).map((item: any, idx: number) => ({
+              id: item.id ?? idx,
+              name: item.name || "Unknown Product",
+              sku: item.sku || "",
+              qty: item.qty || 1,
+              price: item.price || "LKR 0",
+              category: item.category || "",
+              image: item.image || "",
+              unit: item.unit || "",
+            })),
+            notes: d.notes || "",
+            total: d.subTotal || 0,
+            paymentMethod: d.paymentMethod || "cash",
+          };
+        });
+        // Sort client-side by createdAt descending (newest first)
+        fetched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setOrders(fetched);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching orders:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [auth.uid]);
+
+
+
+  const filtered = orders.filter((o) => {
     const q = search.toLowerCase();
-    const matchSearch =
+    return (
       o.id.toLowerCase().includes(q) ||
       o.customer.name.toLowerCase().includes(q) ||
       o.customer.phone.includes(q) ||
-      o.products.some((p) => p.name.toLowerCase().includes(q));
-    const matchStatus = statusFilter === "all" || o.status === statusFilter;
-    return matchSearch && matchStatus;
+      o.products.some((p) => p.name.toLowerCase().includes(q))
+    );
   });
 
   // Summary stats
-  const totalOrders = ORDERS.length;
-  const totalRevenue = ORDERS.reduce((s, o) => s + o.total, 0);
-  const deliveredCount = ORDERS.filter((o) => o.status === "delivered").length;
-  const processingCount = ORDERS.filter(
-    (o) => o.status === "processing" || o.status === "shipped"
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+  const deliveredCount = orders.filter(
+    (o) => o.status === "delivered" || o.status === "payment_complete"
+  ).length;
+  const processingCount = orders.filter(
+    (o) =>
+      o.status === "pending_delivery" ||
+      o.status === "pending_payment" ||
+      o.status === "shipped"
   ).length;
 
   return (
@@ -640,14 +509,14 @@ const CustomerHistory = () => {
                 Order Management
               </p>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-                Customer{" "}
+                My Order{" "}
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 to-indigo-400">
                   History
                 </span>
               </h1>
               <p className="text-white/40 text-sm mt-3 max-w-lg leading-relaxed">
-                View and manage all customer order enquiries, track delivery
-                statuses, and review order details from iIslandLink.
+                View and track all your order enquiries and delivery statuses
+                from iIslandLink.
               </p>
             </div>
 
@@ -665,7 +534,7 @@ const CustomerHistory = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             {
-              label: "Total Revenue",
+              label: "Total Spent",
               value: `LKR ${totalRevenue.toLocaleString()}`,
               icon: Receipt,
               color: "text-violet-400",
@@ -673,7 +542,7 @@ const CustomerHistory = () => {
               border: "border-violet-500/20",
             },
             {
-              label: "Delivered",
+              label: "Completed",
               value: deliveredCount,
               icon: CheckCircle,
               color: "text-emerald-400",
@@ -690,7 +559,7 @@ const CustomerHistory = () => {
             },
             {
               label: "Cancelled",
-              value: ORDERS.filter((o) => o.status === "cancelled").length,
+              value: orders.filter((o) => o.status === "cancelled").length,
               icon: XCircle,
               color: "text-red-400",
               bg: "bg-red-500/10",
@@ -738,24 +607,7 @@ const CustomerHistory = () => {
             />
           </div>
 
-          {/* Status filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter size={13} className="text-white/30 shrink-0" />
-            {statuses.map((s) => (
-              <button
-                key={s.key}
-                id={`filter-${s.key}`}
-                onClick={() => setStatusFilter(s.key)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                  statusFilter === s.key
-                    ? "bg-violet-600 text-white shadow-sm shadow-violet-500/30"
-                    : "bg-white/5 text-white/45 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+
         </div>
 
         <p className="text-white/30 text-xs mt-3">
@@ -765,14 +617,39 @@ const CustomerHistory = () => {
 
       {/* ── Orders List ── */}
       <div className="px-6 md:px-14 pb-24 space-y-3">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <Loader2
+              size={32}
+              className="text-violet-400 animate-spin mb-4"
+            />
+            <p className="text-white/40 font-medium">Loading your orders…</p>
+          </div>
+        ) : !auth.uid ? (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
+              <ShoppingBag size={28} className="text-violet-400/50" />
+            </div>
+            <p className="text-white/40 font-medium">
+              Please log in to view your orders
+            </p>
+            <Link
+              to="/login"
+              className="mt-4 px-6 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-all"
+            >
+              Go to Login
+            </Link>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
             <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
               <ShoppingBag size={28} className="text-violet-400/50" />
             </div>
             <p className="text-white/40 font-medium">No orders found</p>
             <p className="text-white/25 text-sm mt-1">
-              Try adjusting your search or filter criteria.
+              {orders.length === 0
+                ? "You haven't placed any orders yet."
+                : "Try adjusting your search or filter criteria."}
             </p>
           </div>
         ) : (

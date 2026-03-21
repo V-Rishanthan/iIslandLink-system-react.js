@@ -15,7 +15,7 @@ import Testimonials from "./components/Testimonials";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import Dashboard from "./pages/Dashboard";
+
 import PersonalCare from "./screen/PersonalCare";
 import Cleaning from "./screen/Cleaning";
 import PackagedFoods from "./screen/PackagedFoods";
@@ -23,6 +23,7 @@ import Beverages from "./screen/Beverages";
 import CustomerHistory from "./screen/users/CustomerHistory";
 import DeliveryBoy from "./screen/users/DeliveryBoy";
 import PaymentPage from "./pages/PaymentPage";
+import Dashboard from "./pages/Dashboard";
 
 function LandingLayout() {
   return (
