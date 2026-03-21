@@ -23,7 +23,7 @@ import Beverages from "./screen/Beverages";
 import CustomerHistory from "./screen/users/CustomerHistory";
 import DeliveryBoy from "./screen/users/DeliveryBoy";
 import PaymentPage from "./pages/PaymentPage";
-import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function LandingLayout() {
   return (
@@ -96,7 +96,7 @@ function App() {
         <Route path="/" element={<LandingLayout />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/personal-care" element={<PersonalCare />} />
         <Route path="/cleaning" element={<Cleaning />} />
         <Route path="/packaged-food" element={<PackagedFoods />} />
