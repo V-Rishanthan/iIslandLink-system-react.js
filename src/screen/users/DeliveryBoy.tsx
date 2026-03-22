@@ -1,16 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   Truck,
   CheckCircle,
-
   Phone,
   Package,
   Loader2,
   Mail,
   Receipt,
   Calendar,
+  MapPin,
+  Signal,
+  SignalZero,
 } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
 import {
@@ -20,6 +22,8 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
@@ -78,6 +82,9 @@ const DeliveryBoy = () => {
   const auth = useAppSelector((state) => state.auth);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locationSharing, setLocationSharing] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const watchIdRef = useRef<number | null>(null);
 
   // Fetch orders assigned to this delivery boy in real-time
   useEffect(() => {
@@ -136,6 +143,86 @@ const DeliveryBoy = () => {
     return () => unsubscribe();
   }, [auth.uid]);
 
+  // GPS Location Sharing
+  const updateLocation = useCallback(
+    async (position: GeolocationPosition) => {
+      if (!auth.uid) return;
+      try {
+        const activeCount = deliveries.filter((d) => d.status === "shipped").length;
+        await setDoc(doc(db, "delivery_locations", auth.uid), {
+          name: auth.name || auth.email || "Delivery Staff",
+          phone: auth.phone || "",
+          email: auth.email || "",
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          lastUpdated: new Date().toISOString(),
+          activeDeliveries: activeCount,
+        });
+      } catch (err) {
+        console.error("Failed to update location:", err);
+      }
+    },
+    [auth.uid, auth.name, auth.email, auth.phone, deliveries]
+  );
+
+  const startLocationSharing = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setLocationError(null);
+    setLocationSharing(true);
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        updateLocation(position);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setLocationError(
+          error.code === 1
+            ? "Location permission denied. Please allow location access."
+            : error.code === 2
+            ? "Location unavailable. Please check your GPS."
+            : "Location request timed out."
+        );
+        setLocationSharing(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 5000,
+      }
+    );
+  }, [updateLocation]);
+
+  const stopLocationSharing = useCallback(async () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setLocationSharing(false);
+
+    // Remove location doc from Firestore
+    if (auth.uid) {
+      try {
+        await deleteDoc(doc(db, "delivery_locations", auth.uid));
+      } catch (err) {
+        console.error("Failed to remove location:", err);
+      }
+    }
+  }, [auth.uid]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   // Mark an order as delivered in Firestore
   async function markDelivered(id: string) {
     try {
@@ -168,16 +255,58 @@ const DeliveryBoy = () => {
           Back to Home
         </Link>
 
-        <div className="relative z-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-1">
-            Delivery Dashboard
-          </p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white">
-            My Deliveries
-          </h1>
-          <p className="text-white/35 text-sm mt-2">
-            Manage your assigned delivery orders.
-          </p>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-1">
+              Delivery Dashboard
+            </p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-white">
+              My Deliveries
+            </h1>
+            <p className="text-white/35 text-sm mt-2">
+              Manage your assigned delivery orders.
+            </p>
+          </div>
+
+          {/* Location Sharing Toggle */}
+          {auth.uid && (
+            <div className="flex flex-col items-end gap-2">
+              <button
+                id="toggle-location-sharing"
+                onClick={() =>
+                  locationSharing ? stopLocationSharing() : startLocationSharing()
+                }
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  locationSharing
+                    ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {locationSharing ? (
+                  <>
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+                    </span>
+                    <Signal size={14} />
+                    Sharing Location
+                  </>
+                ) : (
+                  <>
+                    <SignalZero size={14} />
+                    <MapPin size={14} />
+                    Share Location
+                  </>
+                )}
+              </button>
+
+              {locationError && (
+                <p className="text-red-400 text-xs max-w-[250px] text-right">
+                  {locationError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

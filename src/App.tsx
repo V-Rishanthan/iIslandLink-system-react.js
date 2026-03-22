@@ -24,6 +24,7 @@ import CustomerHistory from "./screen/users/CustomerHistory";
 import DeliveryBoy from "./screen/users/DeliveryBoy";
 import PaymentPage from "./pages/PaymentPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import DeliveryTracking from "./pages/DeliveryTracking";
 
 function LandingLayout() {
   return (
@@ -97,6 +98,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
+        <Route path="/delivery-tracking" element={<DeliveryTracking />} />
         <Route path="/personal-care" element={<PersonalCare />} />
         <Route path="/cleaning" element={<Cleaning />} />
         <Route path="/packaged-food" element={<PackagedFoods />} />

@@ -688,6 +688,14 @@ const AdminDashboard = () => {
                 to delivery staff.
               </p>
             </div>
+
+            <Link
+              to="/delivery-tracking"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-lg shadow-violet-500/20 hover:-translate-y-0.5 transition-all w-full sm:w-auto justify-center"
+            >
+              <MapPin size={16} />
+              Live Delivery Tracking
+            </Link>
           </div>
         </div>
       </div>
